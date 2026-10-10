@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlavorCraft — Food Recipe Book & Kitchen Assistant</title>
+  <meta name="description" content="Discover delicious recipes, adjust serving sizes, track cooking steps, and easily input your own favorite food recipes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>🍳</text></svg>">
+</head>
+<body class="light-theme">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand" id="brandLogo">
+        <span class="brand-icon">🍳</span>
+        <div class="brand-text">
+          <h1 class="brand-title">FlavorCraft</h1>
+          <span class="brand-subtitle">Recipe Book & Kitchen Hub</span>
+        </div>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search by recipe, ingredient, or tag..." autocomplete="off">
+        <button id="clearSearchBtn" class="clear-btn" title="Clear search" aria-label="Clear search" style="display: none;">&times;</button>
+      </div>
+
+      <!-- Header Action Controls -->
+      <div class="header-actions">
+        <button id="addRecipeBtn" class="btn btn-primary" title="Add a new recipe">
+          <span class="btn-icon">+</span>
+          <span class="btn-text">Add Recipe</span>
+        </button>
+
+        <button id="favoritesFilterBtn" class="btn btn-secondary icon-btn" title="Show Favorites Only">
+          <span class="heart-icon">♥</span>
+          <span class="btn-text desktop-only">Favorites</span>
+        </button>
+
+        <!-- More actions menu (Export/Import/Reset) -->
+        <div class="dropdown">
+          <button id="moreActionsBtn" class="btn btn-secondary icon-btn" title="More options" aria-haspopup="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+              <circle cx="12" cy="12" r="1"></circle>
+              <circle cx="19" cy="12" r="1"></circle>
+              <circle cx="5" cy="12" r="1"></circle>
+            </svg>
+          </button>
+          <div class="dropdown-menu" id="moreActionsMenu">
+            <button class="dropdown-item" id="exportDataBtn">
+              <span>📥</span> Export Recipes (JSON)
+            </button>
+            <label class="dropdown-item file-label" for="importFileInput">
+              <span>📤</span> Import Recipes (JSON)
+              <input type="file" id="importFileInput" accept=".json" style="display:none;">
+            </label>
+            <button class="dropdown-item" id="resetDefaultsBtn">
+              <span>🔄</span> Reset to Default Recipes
+            </button>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="btn btn-secondary icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="main-content">
+    
+    <!-- HERO / DISCOVERY SECTION -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-badge">✨ Culinary Studio</div>
+        <h2 class="hero-heading">What would you like to cook today?</h2>
+        <p class="hero-subtext">Browse handcrafted recipes or input your own signature dishes into your personal digital cookbook.</p>
+        <div class="hero-stats" id="heroStats">
+          <span class="stat-item"><strong id="totalRecipesCount">0</strong> Recipes</span>
+          <span class="stat-dot">•</span>
+          <span class="stat-item"><strong id="quickMealsCount">0</strong> Quick Meals (&lt;30m)</span>
+          <span class="stat-dot">•</span>
+          <span class="stat-item"><strong id="favoritesCount">0</strong> Favorites</span>
+          <span id="storageBadge" class="storage-badge">💾 Local</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FILTER & SORT CONTROLS -->
+    <section class="controls-section">
+      <div class="categories-scroll" id="categoryPills">
+        <button class="pill active" data-category="all">🍽️ All Dishes</button>
+        <button class="pill" data-category="Main Course">🍛 Main Course</button>
+        <button class="pill" data-category="Breakfast">🥞 Breakfast</button>
+        <button class="pill" data-category="Soup & Stew">🍲 Soup & Stew</button>
+        <button class="pill" data-category="Dessert">🍰 Dessert</button>
+        <button class="pill" data-category="Drinks & Snacks">🥤 Drinks & Snacks</button>
+      </div>
+
+      <div class="secondary-filters">
+        <!-- Difficulty filter -->
+        <div class="filter-group">
+          <label for="difficultyFilter">Difficulty:</label>
+          <select id="difficultyFilter" class="filter-select">
+            <option value="all">All Levels</option>
+            <option value="Easy">🟢 Easy</option>
+            <option value="Medium">🟡 Medium</option>
+            <option value="Hard">🔴 Hard</option>
+          </select>
+        </div>
+
+        <!-- Max Time filter -->
+        <div class="filter-group">
+          <label for="timeFilter">Total Time:</label>
+          <select id="timeFilter" class="filter-select">
+            <option value="all">Any Duration</option>
+            <option value="20">⚡ Under 20 mins</option>
+            <option value="40">⏱️ Under 40 mins</option>
+            <option value="60">🍲 Under 60 mins</option>
+          </select>
+        </div>
+
+        <!-- Sort filter -->
+        <div class="filter-group">
+          <label for="sortFilter">Sort by:</label>
+          <select id="sortFilter" class="filter-select">
+            <option value="newest">Latest Added</option>
+            <option value="fastest">Fastest Cook Time</option>
+            <option value="az">Title (A - Z)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTIVE FILTER NOTICE (if filtered) -->
+    <div id="filterStatusNotice" class="filter-status-notice" style="display: none;">
+      <span id="filterStatusText">Showing filtered results</span>
+      <button id="resetFiltersLink" class="reset-link">Reset all filters</button>
+    </div>
+
+    <!-- RECIPES GRID -->
+    <section class="recipes-grid-section">
+      <div id="recipesGrid" class="recipes-grid">
+        <!-- Dynamically rendered recipe cards -->
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">🍳</div>
+        <h3 class="empty-title">No recipes found</h3>
+        <p class="empty-desc">We couldn't find any recipes matching your current search or filter criteria.</p>
+        <div class="empty-actions">
+          <button id="clearAllFiltersBtn" class="btn btn-secondary">Clear Filters</button>
+          <button id="emptyAddBtn" class="btn btn-primary">+ Add New Recipe</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- RECIPE DETAIL MODAL -->
+  <div id="recipeModal" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal-card detail-modal">
+      <button class="modal-close-btn" id="closeDetailModalBtn" title="Close (Esc)" aria-label="Close modal">&times;</button>
+      
+      <div id="recipeDetailContent" class="modal-scroll-content">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT RECIPE MODAL -->
+  <div id="formModal" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal-card form-modal">
+      <div class="modal-header">
+        <h3 id="formModalTitle" class="modal-title">Add New Recipe</h3>
+        <button class="modal-close-btn" id="closeFormModalBtn" title="Close" aria-label="Close form">&times;</button>
+      </div>
+
+      <form id="recipeForm" class="modal-form" novalidate>
+        <input type="hidden" id="formRecipeId" value="">
+
+        <!-- Basic Info Section -->
+        <div class="form-section">
+          <h4 class="form-section-title">1. Basic Information</h4>
+          
+          <div class="form-group">
+            <label for="recipeTitleInput" class="form-label required">Recipe Title</label>
+            <input type="text" id="recipeTitleInput" class="form-input" placeholder="e.g. Crispy Honey Garlic Salmon" required>
+            <div class="field-error" id="titleError"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="recipeCategoryInput" class="form-label required">Category</label>
+              <select id="recipeCategoryInput" class="form-select" required>
+                <option value="Main Course">🍛 Main Course</option>
+                <option value="Breakfast">🥞 Breakfast</option>
+                <option value="Soup & Stew">🍲 Soup & Stew</option>
+                <option value="Dessert">🍰 Dessert</option>
+                <option value="Drinks & Snacks">🥤 Drinks & Snacks</option>
+                <option value="Appetizer">🥗 Appetizer / Salad</option>
+                <option value="Custom">+ Custom Category...</option>
+              </select>
+              <input type="text" id="recipeCustomCategoryInput" class="form-input mt-2" placeholder="Enter custom category name" style="display:none;">
+            </div>
+
+            <div class="form-group col-half">
+              <label for="recipeCuisineInput" class="form-label">Cuisine / Origin</label>
+              <input type="text" id="recipeCuisineInput" class="form-input" placeholder="e.g. Indonesian, Italian, Asian, Western">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="recipeDescInput" class="form-label required">Short Description</label>
+            <textarea id="recipeDescInput" class="form-textarea" rows="2" placeholder="Tell us why this recipe is special, the texture, or flavor notes..." required></textarea>
+            <div class="field-error" id="descError"></div>
+          </div>
+
+          <div class="form-row form-row-3">
+            <div class="form-group col-third">
+              <label for="recipePrepTimeInput" class="form-label required">Prep Time (mins)</label>
+              <input type="number" id="recipePrepTimeInput" class="form-input" min="0" max="999" value="15" required>
+            </div>
+            <div class="form-group col-third">
+              <label for="recipeCookTimeInput" class="form-label required">Cook Time (mins)</label>
+              <input type="number" id="recipeCookTimeInput" class="form-input" min="0" max="999" value="20" required>
+            </div>
+            <div class="form-group col-third">
+              <label for="recipeServingsInput" class="form-label required">Servings</label>
+              <input type="number" id="recipeServingsInput" class="form-input" min="1" max="50" value="4" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="recipeDifficultyInput" class="form-label">Difficulty Level</label>
+            <div class="radio-group" id="difficultyRadioGroup">
+              <label class="radio-label">
+                <input type="radio" name="difficultyRadio" value="Easy" checked>
+                <span class="radio-pill easy">🟢 Easy</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="difficultyRadio" value="Medium">
+                <span class="radio-pill medium">🟡 Medium</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="difficultyRadio" value="Hard">
+                <span class="radio-pill hard">🔴 Hard</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipe Photo Section -->
+        <div class="form-section">
+          <h4 class="form-section-title">2. Recipe Photo</h4>
+          
+          <div class="image-source-tabs">
+            <button type="button" class="tab-btn active" data-tab="urlTab">Image URL</button>
+            <button type="button" class="tab-btn" data-tab="uploadTab">Upload File</button>
+            <button type="button" class="tab-btn" data-tab="presetsTab">Pick Presets</button>
+          </div>
+
+          <!-- URL Tab -->
+          <div id="urlTab" class="tab-pane active">
+            <div class="form-group">
+              <input type="url" id="recipeImageUrlInput" class="form-input" placeholder="https://images.unsplash.com/photo-...">
+              <span class="field-hint">Paste an image link from web, Unsplash, or Pexels.</span>
+            </div>
+          </div>
+
+          <!-- Upload Tab -->
+          <div id="uploadTab" class="tab-pane">
+            <div class="upload-dropzone" id="uploadDropzone">
+              <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <p>Drag & drop recipe photo here or <span class="browse-link">browse file</span></p>
+              <input type="file" id="recipeImageFileInput" accept="image/*" style="display:none;">
+            </div>
+          </div>
+
+          <!-- Presets Tab -->
+          <div id="presetsTab" class="tab-pane">
+            <div class="preset-gallery" id="presetGallery">
+              <!-- Preset chips populated via JS -->
+            </div>
+          </div>
+
+          <!-- Live Image Preview Box -->
+          <div class="image-preview-container">
+            <div class="preview-box" id="imagePreviewBox">
+              <img id="imagePreviewImg" src="" alt="Recipe preview" style="display:none;">
+              <span id="imagePreviewPlaceholder">No image selected (default culinary placeholder will be used)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ingredients Section -->
+        <div class="form-section">
+          <div class="section-header-row">
+            <h4 class="form-section-title">3. Ingredients List</h4>
+            <button type="button" class="btn btn-sm btn-ghost" id="bulkIngredientsToggle">⚡ Bulk Paste</button>
+          </div>
+
+          <!-- Single item dynamic rows -->
+          <div id="ingredientsListBuilder" class="builder-list">
+            <!-- Dynamic rows added here -->
+          </div>
+          
+          <button type="button" id="addIngredientRowBtn" class="btn btn-sm btn-secondary mt-2">
+            + Add Another Ingredient
+          </button>
+
+          <!-- Bulk Paste Pane (Hidden by default) -->
+          <div id="bulkIngredientsPane" class="bulk-pane" style="display:none;">
+            <label class="form-label">Paste ingredients (one per line, e.g. "2 cups Jasmine Rice" or "500g Chicken"):</label>
+            <textarea id="bulkIngredientsText" class="form-textarea" rows="4" placeholder="2 cups Jasmine rice&#10;500g Chicken breast (diced)&#10;2 tbsp Olive oil&#10;1 tsp Salt"></textarea>
+            <button type="button" id="applyBulkIngredientsBtn" class="btn btn-sm btn-primary mt-2">Parse &amp; Apply</button>
+          </div>
+          <div class="field-error" id="ingredientsError"></div>
+        </div>
+
+        <!-- Instructions / Cooking Steps -->
+        <div class="form-section">
+          <div class="section-header-row">
+            <h4 class="form-section-title">4. Cooking Steps</h4>
+            <button type="button" class="btn btn-sm btn-ghost" id="bulkStepsToggle">⚡ Bulk Paste</button>
+          </div>
+
+          <div id="stepsListBuilder" class="builder-list">
+            <!-- Dynamic step rows added here -->
+          </div>
+
+          <button type="button" id="addStepRowBtn" class="btn btn-sm btn-secondary mt-2">
+            + Add Another Step
+          </button>
+
+          <!-- Bulk Paste Pane for steps -->
+          <div id="bulkStepsPane" class="bulk-pane" style="display:none;">
+            <label class="form-label">Paste steps (one per line or numbered):</label>
+            <textarea id="bulkStepsText" class="form-textarea" rows="4" placeholder="1. Heat oil in a deep skillet over medium heat.&#10;2. Add garlic and sauté until fragrant.&#10;3. Add chicken and cook until golden brown."></textarea>
+            <button type="button" id="applyBulkStepsBtn" class="btn btn-sm btn-primary mt-2">Parse &amp; Apply Steps</button>
+          </div>
+          <div class="field-error" id="stepsError"></div>
+        </div>
+
+        <!-- Chef's Tips & Tags -->
+        <div class="form-section">
+          <h4 class="form-section-title">5. Chef's Tips &amp; Tags</h4>
+          <div class="form-group">
+            <label for="recipeTipsInput" class="form-label">Chef's Secret Tip / Note (optional)</label>
+            <textarea id="recipeTipsInput" class="form-textarea" rows="2" placeholder="e.g. For extra crispiness, ensure the pan is smoking hot before adding meat."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="recipeTagsInput" class="form-label">Tags (comma separated)</label>
+            <input type="text" id="recipeTagsInput" class="form-input" placeholder="e.g. Quick, Spicy, Comfort Food, High Protein">
+          </div>
+        </div>
+
+        <!-- Form Submission Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveRecipeSubmitBtn">Save Recipe</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CONFIRM DELETE MODAL -->
+  <div id="deleteModal" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal-card confirm-modal">
+      <div class="confirm-icon">🗑️</div>
+      <h3 class="confirm-title">Delete this recipe?</h3>
+      <p class="confirm-desc">Are you sure you want to delete <strong id="deleteRecipeTitle">this recipe</strong>? This action cannot be undone.</p>
+      <div class="confirm-actions">
+        <button id="cancelDeleteBtn" class="btn btn-secondary">Keep Recipe</button>
+        <button id="confirmDeleteBtn" class="btn btn-danger">Yes, Delete Recipe</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <strong>FlavorCraft</strong> — Recipe Web Application for PA Danang
+      </div>
+      <div class="footer-meta">
+        Crafted with standard vanilla web technologies • No external dependencies required
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT MODULES -->
+  <script src="js/recipes-data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+
